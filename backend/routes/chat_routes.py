@@ -19,7 +19,6 @@ async def chat_stream(data:ChatMessage,user=Depends(get_current_user)):
 @router.get("/sessions/{session_id}/messages")
 async def get_messages(session_id:str,user=Depends(get_current_user)):
     db=get_db()
-    from app.database import get_db as gdb
     session=await db.sessions.find_one({"session_id":session_id,"user_id":user["id"]})
     if not session:
         raise HTTPException(status_code=404,detail="Session not found")

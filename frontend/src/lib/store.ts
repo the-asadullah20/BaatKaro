@@ -17,6 +17,7 @@ interface AppStore{
   isStreaming:boolean
   haspdfs:boolean
   lastReply:string
+  
   setUser:(user:User|null)=>void
   setToken:(token:string|null)=>void
   setTheme:(theme:'light'|'dark')=>void
@@ -43,7 +44,6 @@ export const useStore=create<AppStore>((set)=>({
   isStreaming:false,
   haspdfs:false,
   lastReply:'',
-
   setUser:(user)=>set({user}),
   setToken:(token)=>{
     set({token})

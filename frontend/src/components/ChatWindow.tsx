@@ -2,6 +2,15 @@
 import {useEffect,useRef} from 'react'
 import {Message} from '@/types'
 
+
+function renderMarkdown(text:string):string{
+  return text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`(.*?)`/g,'<code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;font-size:12px">$1</code>')
+    .replace(/\n/g,'<br/>')
+}
+
 interface Props{messages:Message[];isStreaming:boolean}
 
 export default function ChatWindow({messages,isStreaming}:Props){
