@@ -4,10 +4,7 @@ function getToken(){
   return localStorage.getItem('token')
 }
 
-getSessionMessages: async(session_id: string)=>{
-  const res = await request(`/api/chat/sessions/${session_id}/messages`)
-  return res.json()
-}
+
 
 async function request(path:string,options:RequestInit={}){
   const token=getToken()
@@ -46,6 +43,10 @@ export const auth={
 }
 
 export const chat={
+  getSessionMessages:async(session_id:string)=>{
+    const res=await request(`/api/chat/sessions/${session_id}/messages`)
+    return res.json()
+  },
   stream:async(message:string,session_id:string|null,onChunk:(chunk:string)=>void)=>{
     const token=getToken()
     const res=await fetch(`${BASE_URL}/api/chat/stream`,{

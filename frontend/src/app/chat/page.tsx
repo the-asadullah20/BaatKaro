@@ -20,6 +20,16 @@ export default function ChatPage(){
     if(!token){router.push('/auth');return}
     auth.me().then(setUser).catch(()=>router.push('/auth'))
     loadSessions()
+    const bubbles=[{s:130,t:'6%',l:'35%',d:7},{s:70,t:'18%',l:'72%',d:9},{s:100,t:'48%',l:'55%',d:11},{s:50,t:'62%',l:'84%',d:8},{s:155,t:'68%',l:'28%',d:13}];
+    const bc=document.getElementById('chatBubbles');
+    if(bc && bc.childNodes.length===0){
+      bubbles.forEach((b,i)=>{
+        const el=document.createElement('div');
+        el.className='bubble-item';
+        el.style.cssText='width:'+b.s+'px;height:'+b.s+'px;top:'+b.t+';left:'+b.l+';animation-duration:'+b.d+'s;animation-delay:-'+(i*1.5)+'s';
+        bc.appendChild(el);
+      });
+    }
   },[])
 
   async function loadSessions(){
@@ -124,11 +134,7 @@ export default function ChatPage(){
 
       {showPdfModal&&<PdfUpload onClose={()=>setShowPdfModal(false)} onUploaded={()=>{setHasPdfs(true);setShowPdfModal(false)}}/>}
 
-      <script dangerouslySetInnerHTML={{__html:`
-        const bubbles=[{s:130,t:'6%',l:'35%',d:7},{s:70,t:'18%',l:'72%',d:9},{s:100,t:'48%',l:'55%',d:11},{s:50,t:'62%',l:'84%',d:8},{s:155,t:'68%',l:'28%',d:13}];
-        const bc=document.getElementById('chatBubbles');
-        if(bc)bubbles.forEach((b,i)=>{const el=document.createElement('div');el.className='bubble-item';el.style.cssText='width:'+b.s+'px;height:'+b.s+'px;top:'+b.t+';left:'+b.l+';animation-duration:'+b.d+'s;animation-delay:-'+(i*1.5)+'s';bc.appendChild(el)});
-      `}}/>
+
     </div>
   )
 }

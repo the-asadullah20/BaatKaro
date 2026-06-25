@@ -24,6 +24,16 @@ export default function AuthPage(){
       const token=localStorage.getItem('token')
       if(token)router.push('/chat')
     }
+    const bubbles=[{s:140,t:'8%',l:'10%',d:7},{s:80,t:'20%',l:'70%',d:9},{s:110,t:'60%',l:'55%',d:11},{s:60,t:'72%',l:'82%',d:8},{s:170,t:'75%',l:'5%',d:13}];
+    const bc=document.getElementById('authBubbles');
+    if(bc && bc.childNodes.length===0){
+      bubbles.forEach((b,i)=>{
+        const el=document.createElement('div');
+        el.className='bubble-item';
+        el.style.cssText='width:'+b.s+'px;height:'+b.s+'px;top:'+b.t+';left:'+b.l+';animation-duration:'+b.d+'s;animation-delay:-'+(i*1.5)+'s';
+        bc.appendChild(el);
+      });
+    }
   },[])
 
   useEffect(()=>{
@@ -49,17 +59,19 @@ export default function AuthPage(){
     const canvas=canvasRef.current!
     const video=videoRef.current!
     const ctx=canvas.getContext('2d')!
-    canvas.width=160
-    canvas.height=160
-    ctx.drawImage(video,0,0,160,160)
-    const data=ctx.getImageData(0,0,160,160).data
+    canvas.width=6
+    canvas.height=7
+    ctx.drawImage(video,0,0,6,7)
+    const data=ctx.getImageData(0,0,6,7).data
     const encoding:number[]=[]
     for(let i=0;i<data.length;i+=4){
       encoding.push(data[i]/255)
       encoding.push(data[i+1]/255)
       encoding.push(data[i+2]/255)
     }
-    return encoding.slice(0,128)
+    encoding.push(0)
+    encoding.push(0)
+    return encoding
   }
 
   async function handleSubmit(){
@@ -142,11 +154,7 @@ export default function AuthPage(){
         </div>
       </div>
 
-      <script dangerouslySetInnerHTML={{__html:`
-        const bubbles=[{s:140,t:'8%',l:'10%',d:7},{s:80,t:'20%',l:'70%',d:9},{s:110,t:'60%',l:'55%',d:11},{s:60,t:'72%',l:'82%',d:8},{s:170,t:'75%',l:'5%',d:13}];
-        const bc=document.getElementById('authBubbles');
-        if(bc)bubbles.forEach((b,i)=>{const el=document.createElement('div');el.className='bubble-item';el.style.cssText='width:'+b.s+'px;height:'+b.s+'px;top:'+b.t+';left:'+b.l+';animation-duration:'+b.d+'s;animation-delay:-'+(i*1.5)+'s';bc.appendChild(el)});
-      `}}/>
+
     </div>
   )
 }

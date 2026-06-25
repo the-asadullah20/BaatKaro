@@ -38,7 +38,7 @@ export default function ChatWindow({messages,isStreaming}:Props){
           </div>
           <div style={{display:'flex',flexDirection:'column',alignItems:msg.role==='user'?'flex-end':'flex-start'}}>
             <div style={{padding:'8px 12px',borderRadius:'12px',borderBottomLeftRadius:msg.role==='assistant'?'3px':'12px',borderBottomRightRadius:msg.role==='user'?'3px':'12px',fontSize:'13px',lineHeight:1.55,background:msg.role==='user'?'var(--accent)':'var(--ai-msg)',color:msg.role==='user'?'#fff':'var(--text-primary)',border:msg.role==='assistant'?'1px solid var(--border)':'none',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>
-              {msg.content}
+              {msg.role==='assistant'?msg.content.replace(/\*/g,''):msg.content}
               {isStreaming&&i===messages.length-1&&msg.role==='assistant'&&msg.content===''&&(
                 <div style={{display:'flex',gap:'4px',padding:'2px 0'}}>
                   {[0,1,2].map(j=>(
