@@ -51,13 +51,57 @@ async def save_message(session_id:str,role:str,content:str):
         {"$push":{"messages":{"role":role,"content":content,"timestamp":datetime.utcnow()}}}
     )
 
+def langchain_to_groq_messages(lc_messages):
+    groq_msgs = []
+    for msg in lc_messages:
+        role = "user"
+        if msg.type == "system":
+            role = "system"
+        elif msg.type == "ai":
+            role = "assistant"
+        groq_msgs.append({"role": role, "content": msg.content})
+    return groq_msgs
+
+async def fallback_stream_groq(messages):
+    try:
+        from groq import AsyncGroq
+        client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+        stream = await client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=langchain_to_groq_messages(messages),
+            stream=True
+        )
+        async for chunk in stream:
+            content = chunk.choices[0].delta.content or ""
+            if content:
+                yield content
+    except Exception as e:
+        print(f"Groq fallback failed: {e}", flush=True)
+        yield " [Error: Both Gemini and Groq systems are currently unavailable. Please try again later.]"
+
 async def chat(user_id:str,message:str,session_id:str=None):
     session_id=await get_or_create_session(user_id,session_id)
     history=await get_chat_history(session_id)
     messages=[SystemMessage(content=SYSTEM_PROMPT)]+history+[HumanMessage(content=message)]
     trace=track(user_id=user_id,session_id=session_id,input=message)
-    response=await llm.ainvoke(messages)
-    reply=response.content
+    reply = ""
+    try:
+        response=await llm.ainvoke(messages)
+        reply=response.content
+    except Exception as e:
+        print(f"Gemini invoke failed, falling back to Groq: {e}", flush=True)
+        try:
+            from groq import AsyncGroq
+            client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+            completion = await client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=langchain_to_groq_messages(messages),
+            )
+            reply = completion.choices[0].message.content
+        except Exception as ge:
+            print(f"Groq fallback failed: {ge}", flush=True)
+            reply = "Both Gemini and Groq systems are currently unavailable. Please try again later."
+            
     await save_message(session_id,"user",message)
     await save_message(session_id,"assistant",reply)
     if trace:
@@ -69,10 +113,16 @@ async def stream_chat(user_id:str,message:str,session_id:str=None):
     history=await get_chat_history(session_id)
     messages=[SystemMessage(content=SYSTEM_PROMPT)]+history+[HumanMessage(content=message)]
     full_reply=""
-    async for chunk in llm.astream(messages):
-        if chunk.content:
-            full_reply+=chunk.content
-            yield chunk.content
+    try:
+        async for chunk in llm.astream(messages):
+            if chunk.content:
+                full_reply+=chunk.content
+                yield chunk.content
+    except Exception as e:
+        print(f"Gemini streaming failed, falling back to Groq: {e}", flush=True)
+        async for content in fallback_stream_groq(messages):
+            full_reply+=content
+            yield content
     await save_message(session_id,"user",message)
     await save_message(session_id,"assistant",full_reply)
 

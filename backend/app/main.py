@@ -9,6 +9,11 @@ from routes.pdf_routes import router as pdf_router
 from middleware.guardrails import GuardrailsMiddleware
 from middleware.logging_middleware import LoggingMiddleware
 from services.langfuse_service import init_langfuse
+import os
+
+if os.environ.get("LOGFIRE_TOKEN"):
+    import logfire
+    logfire.configure()
 
 
 @asynccontextmanager
@@ -20,6 +25,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="BaatKaro API", version="1.0.0", lifespan=lifespan)
+
+if os.environ.get("LOGFIRE_TOKEN"):
+    logfire.instrument_fastapi(app)
 
 app.add_middleware(
     CORSMiddleware,

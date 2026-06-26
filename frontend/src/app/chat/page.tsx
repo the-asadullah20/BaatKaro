@@ -42,6 +42,7 @@ export default function ChatPage(){
 
   async function handleSessionClick(sessionId:string){
     setSidebarOpen(false)
+    setMessages([])
     setCurrentSession(sessionId)
     try{
       const msgs=await chat.getSessionMessages(sessionId)

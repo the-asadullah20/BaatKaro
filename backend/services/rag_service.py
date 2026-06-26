@@ -83,10 +83,17 @@ async def rag_chat(user_id: str, message: str, session_id: str = None):
     messages = [SystemMessage(content=system)] + history + [HumanMessage(content=message)]
     track_rag(user_id=user_id, session_id=session_id, input=message, chunks=len(docs))
     full_reply = ""
-    async for chunk in llm.astream(messages):
-        if chunk.content:
-            full_reply += chunk.content
-            yield chunk.content
+    try:
+        async for chunk in llm.astream(messages):
+            if chunk.content:
+                full_reply += chunk.content
+                yield chunk.content
+    except Exception as e:
+        print(f"Gemini RAG streaming failed, falling back to Groq: {e}", flush=True)
+        from services.chat_service import fallback_stream_groq
+        async for content in fallback_stream_groq(messages):
+            full_reply += content
+            yield content
     await save_message(session_id, "user", message)
     await save_message(session_id, "assistant", full_reply)
 

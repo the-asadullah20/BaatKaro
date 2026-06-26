@@ -59,7 +59,7 @@ export const useStore=create<AppStore>((set)=>({
     }
   },
   setSessions:(sessions)=>set({sessions}),
-  setCurrentSession:(id)=>set({currentSessionId:id,messages:[]}),
+  setCurrentSession:(id)=>set({currentSessionId:id}),
   addMessage:(msg)=>set((s)=>({messages:[...s.messages,msg]})),
   setMessages:(msgs)=>set({messages:msgs}),
   appendToLastMessage:(chunk)=>set((s)=>{
