@@ -6,7 +6,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from app.database import get_db
 from core.config import settings
 from datetime import datetime
-from services.langfuse_service import track_rag
+from services.langfuse_service import track_rag, flush
 import tempfile
 import asyncio
 import os
@@ -81,7 +81,12 @@ async def rag_chat(user_id: str, message: str, session_id: str = None):
     context = "\n\n".join([d.page_content for d in docs])
     system = f"{RAG_SYSTEM}\n\nDocument Context:\n{context}"
     messages = [SystemMessage(content=system)] + history + [HumanMessage(content=message)]
-    track_rag(user_id=user_id, session_id=session_id, input=message, chunks=len(docs))
+    trace = None
+    try:
+        trace = track_rag(user_id=user_id, session_id=session_id, input=message, chunks=len(docs))
+    except Exception as te:
+        print(f"Langfuse RAG trace init failed: {te}", flush=True)
+
     full_reply = ""
     try:
         async for chunk in llm.astream(messages):
@@ -96,6 +101,13 @@ async def rag_chat(user_id: str, message: str, session_id: str = None):
             yield content
     await save_message(session_id, "user", message)
     await save_message(session_id, "assistant", full_reply)
+    
+    if trace:
+        try:
+            trace.update(output=full_reply)
+            flush()
+        except Exception as te:
+            print(f"Langfuse RAG trace update/flush failed: {te}", flush=True)
 
 
 async def rag_stream_fallback(user_id: str, message: str, session_id: str):

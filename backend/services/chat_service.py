@@ -2,7 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage,AIMessage,SystemMessage
 from app.database import get_db
 from core.config import settings
-from services.langfuse_service import track
+from services.langfuse_service import track, flush
 from datetime import datetime
 import uuid
 
@@ -83,7 +83,11 @@ async def chat(user_id:str,message:str,session_id:str=None):
     session_id=await get_or_create_session(user_id,session_id)
     history=await get_chat_history(session_id)
     messages=[SystemMessage(content=SYSTEM_PROMPT)]+history+[HumanMessage(content=message)]
-    trace=track(user_id=user_id,session_id=session_id,input=message)
+    trace = None
+    try:
+        trace = track(user_id=user_id, session_id=session_id, input=message)
+    except Exception as te:
+        print(f"Langfuse trace init failed: {te}", flush=True)
     reply = ""
     try:
         response=await llm.ainvoke(messages)
@@ -105,13 +109,24 @@ async def chat(user_id:str,message:str,session_id:str=None):
     await save_message(session_id,"user",message)
     await save_message(session_id,"assistant",reply)
     if trace:
-        trace.update(output=reply)
+        try:
+            trace.update(output=reply)
+            flush()
+        except Exception as te:
+            print(f"Langfuse trace update/flush failed: {te}", flush=True)
     return reply,session_id
 
 async def stream_chat(user_id:str,message:str,session_id:str=None):
     session_id=await get_or_create_session(user_id,session_id)
     history=await get_chat_history(session_id)
     messages=[SystemMessage(content=SYSTEM_PROMPT)]+history+[HumanMessage(content=message)]
+    
+    trace = None
+    try:
+        trace = track(user_id=user_id, session_id=session_id, input=message)
+    except Exception as te:
+        print(f"Langfuse trace init failed: {te}", flush=True)
+
     full_reply=""
     try:
         async for chunk in llm.astream(messages):
@@ -125,6 +140,13 @@ async def stream_chat(user_id:str,message:str,session_id:str=None):
             yield content
     await save_message(session_id,"user",message)
     await save_message(session_id,"assistant",full_reply)
+    
+    if trace:
+        try:
+            trace.update(output=full_reply)
+            flush()
+        except Exception as te:
+            print(f"Langfuse trace update/flush failed: {te}", flush=True)
 
 async def get_user_sessions(user_id: str):
     db = get_db()
