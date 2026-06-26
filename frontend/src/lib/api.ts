@@ -1,4 +1,4 @@
-const BASE_URL=process.env.NEXT_PUBLIC_API_URL||'http://localhost:8000'
+const BASE_URL=typeof window!=='undefined'?'':(process.env.NEXT_PUBLIC_API_URL||'http://localhost:8000')
 
 function getToken(){
   return localStorage.getItem('token')
@@ -55,6 +55,7 @@ export const chat={
       body:JSON.stringify({message,session_id})
     })
     if(!res.ok)throw new Error('Stream failed')
+    const sessionId=res.headers.get('X-Session-Id')
     const reader=res.body!.getReader()
     const decoder=new TextDecoder()
     while(true){
@@ -62,6 +63,7 @@ export const chat={
       if(done)break
       onChunk(decoder.decode(value))
     }
+    return sessionId
   },
   ragStream:async(message:string,session_id:string|null,onChunk:(chunk:string)=>void)=>{
     const token=getToken()
@@ -71,6 +73,7 @@ export const chat={
       body:JSON.stringify({message,session_id})
     })
     if(!res.ok)throw new Error('RAG stream failed')
+    const sessionId=res.headers.get('X-Session-Id')
     const reader=res.body!.getReader()
     const decoder=new TextDecoder()
     while(true){
@@ -78,6 +81,7 @@ export const chat={
       if(done)break
       onChunk(decoder.decode(value))
     }
+    return sessionId
   },
   getSessions:async()=>{
     const res=await request('/api/chat/sessions')

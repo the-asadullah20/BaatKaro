@@ -5,7 +5,10 @@ BLOCKED_PATTERNS = [
     "self harm", "drug synthesis", "hack into"
 ]
 
-SKIP_PATHS = ["/api/media/stt", "/api/pdf/upload", "/health", "/"]
+SKIP_PATHS = [
+    "/api/media/stt", "/api/pdf/upload", "/health", "/",
+    "/api/auth/register", "/api/auth/login", "/api/auth/face-login", "/api/auth/me"
+]
 
 class GuardrailsMiddleware:
     def __init__(self, app):

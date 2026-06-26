@@ -1,5 +1,5 @@
 'use client'
-import {useEffect,useRef,useState} from 'react'
+import {useEffect,useRef,useState,useCallback} from 'react'
 import {useRouter} from 'next/navigation'
 import {useStore} from '@/lib/store'
 import {auth,chat,pdf} from '@/lib/api'
@@ -10,11 +10,19 @@ import PdfUpload from '@/components/PdfUpload'
 
 export default function ChatPage(){
   const router=useRouter()
-  const{user,setUser,token,currentSessionId,setCurrentSession,addMessage,appendToLastMessage,setIsStreaming,isStreaming,haspdfs,setHasPdfs,messages,setMessages,setSessions,lastReply}=useStore()
+  const{setUser,token,currentSessionId,setCurrentSession,addMessage,appendToLastMessage,setIsStreaming,isStreaming,haspdfs,setHasPdfs,messages,setMessages,setSessions,lastReply}=useStore()
   const[input,setInput]=useState('')
   const[showPdfModal,setShowPdfModal]=useState(false)
   const[error,setError]=useState('')
+  const[sidebarOpen,setSidebarOpen]=useState(false)
   const inputRef=useRef<HTMLTextAreaElement>(null)
+
+  const loadSessions = useCallback(async ()=>{
+    try{
+      const s=await chat.getSessions()
+      setSessions(s)
+    }catch{}
+  },[setSessions])
 
   useEffect(()=>{
     if(!token){router.push('/auth');return}
@@ -30,16 +38,10 @@ export default function ChatPage(){
         bc.appendChild(el);
       });
     }
-  },[])
-
-  async function loadSessions(){
-    try{
-      const s=await chat.getSessions()
-      setSessions(s)
-    }catch{}
-  }
+  },[token,router,setUser,loadSessions])
 
   async function handleSessionClick(sessionId:string){
+    setSidebarOpen(false)
     setCurrentSession(sessionId)
     try{
       const msgs=await chat.getSessionMessages(sessionId)
@@ -58,9 +60,12 @@ export default function ChatPage(){
     setIsStreaming(true)
     try{
       const streamFn=haspdfs?chat.ragStream:chat.stream
-      await streamFn(msg,currentSessionId,(chunk)=>{
+      const newSessionId=await streamFn(msg,currentSessionId,(chunk)=>{
         appendToLastMessage(chunk)
       })
+      if(newSessionId && newSessionId!==currentSessionId){
+        setCurrentSession(newSessionId)
+      }
       await loadSessions()
     }catch{
       appendToLastMessage('Something went wrong. Please try again.')
@@ -70,6 +75,7 @@ export default function ChatPage(){
   }
 
   async function handleNewChat(){
+    setSidebarOpen(false)
     setCurrentSession(null)
     setMessages([])
     setError('')
@@ -82,10 +88,31 @@ export default function ChatPage(){
   return(
     <div style={{display:'flex',height:'100vh',background:'var(--bg)',overflow:'hidden',position:'relative'}}>
       <div className="bubble-bg" id="chatBubbles"/>
-      <Sidebar onNewChat={handleNewChat} onSessionClick={handleSessionClick}/>
+      <div className={`responsive-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <Sidebar onNewChat={handleNewChat} onSessionClick={handleSessionClick}/>
+      </div>
+      {sidebarOpen && (
+        <div className="responsive-sidebar-overlay" onClick={()=>setSidebarOpen(false)}/>
+      )}
 
       <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0,zIndex:1}}>
         <div style={{height:'48px',minHeight:'48px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',padding:'0 16px',background:'rgba(250,248,245,0.96)',gap:'10px',backdropFilter:'blur(8px)'}}>
+          <button 
+            className="mobile-menu-btn"
+            onClick={()=>setSidebarOpen(true)}
+            style={{
+              width:'30px',
+              height:'30px',
+              borderRadius:'6px',
+              border:'none',
+              background:'transparent',
+              color:'var(--text-secondary)',
+              alignItems:'center',
+              justifyContent:'center'
+            }}
+          >
+            <i className="ti ti-menu-2" style={{fontSize:'18px'}} aria-hidden="true"/>
+          </button>
           <span style={{fontFamily:'Space Grotesk',fontSize:'14px',fontWeight:500,flex:1,color:'var(--text-primary)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
             {currentSessionId?'Chat session':'New chat'}
           </span>
@@ -133,7 +160,6 @@ export default function ChatPage(){
       </div>
 
       {showPdfModal&&<PdfUpload onClose={()=>setShowPdfModal(false)} onUploaded={()=>{setHasPdfs(true);setShowPdfModal(false)}}/>}
-
 
     </div>
   )

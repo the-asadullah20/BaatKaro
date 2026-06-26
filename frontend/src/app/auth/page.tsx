@@ -15,6 +15,10 @@ export default function AuthPage(){
   const[password,setPassword]=useState('')
   const[error,setError]=useState('')
   const[loading,setLoading]=useState(false)
+  const[showPassword,setShowPassword]=useState(false)
+  const[faceEncoding,setFaceEncoding]=useState<number[]|null>(null)
+  const[photoCaptured,setPhotoCaptured]=useState(false)
+  const[previewUrl,setPreviewUrl]=useState<string|null>(null)
   const videoRef=useRef<HTMLVideoElement>(null)
   const canvasRef=useRef<HTMLCanvasElement>(null)
   const streamRef=useRef<MediaStream|null>(null)
@@ -34,9 +38,12 @@ export default function AuthPage(){
         bc.appendChild(el);
       });
     }
-  },[])
+  },[router])
 
   useEffect(()=>{
+    setPhotoCaptured(false)
+    setPreviewUrl(null)
+    setFaceEncoding(null)
     if(mode==='face'||mode==='register')startCamera()
     else stopCamera()
     return()=>{stopCamera()}
@@ -55,10 +62,13 @@ export default function AuthPage(){
     streamRef.current=null
   }
 
-  function captureEncoding():number[]{
-    const canvas=canvasRef.current!
-    const video=videoRef.current!
-    const ctx=canvas.getContext('2d')!
+  function handleCapture(){
+    const canvas=canvasRef.current
+    const video=videoRef.current
+    if(!canvas || !video) return
+    const ctx=canvas.getContext('2d')
+    if(!ctx) return
+    
     canvas.width=6
     canvas.height=7
     ctx.drawImage(video,0,0,6,7)
@@ -71,7 +81,24 @@ export default function AuthPage(){
     }
     encoding.push(0)
     encoding.push(0)
-    return encoding
+    setFaceEncoding(encoding)
+    
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = video.videoWidth || 320
+    tempCanvas.height = video.videoHeight || 240
+    const tempCtx = tempCanvas.getContext('2d')!
+    tempCtx.drawImage(video,0,0,tempCanvas.width,tempCanvas.height)
+    setPreviewUrl(tempCanvas.toDataURL('image/jpeg'))
+    setPhotoCaptured(true)
+    
+    stopCamera()
+  }
+
+  function handleRetake(){
+    setPhotoCaptured(false)
+    setPreviewUrl(null)
+    setFaceEncoding(null)
+    startCamera()
   }
 
   async function handleSubmit(){
@@ -81,18 +108,22 @@ export default function AuthPage(){
       if(mode==='login'){
         res=await auth.login(email,password)
       }else if(mode==='register'){
-        const encoding=captureEncoding()
-        res=await auth.register(name,email,password,encoding)
+        if(!faceEncoding){
+          throw new Error('Please capture your face photo first!')
+        }
+        res=await auth.register(name,email,password,faceEncoding)
       }else{
-        const encoding=captureEncoding()
-        res=await auth.faceLogin(encoding)
+        if(!faceEncoding){
+          throw new Error('Please capture your face photo first!')
+        }
+        res=await auth.faceLogin(faceEncoding)
       }
       setToken(res.token)
       const me=await auth.me()
       setUser(me)
       router.push('/chat')
-    }catch(e:any){
-      setError(e.message||'Something went wrong')
+    }catch(e){
+      setError(e instanceof Error ? e.message : 'Something went wrong')
     }finally{setLoading(false)}
   }
 
@@ -132,18 +163,64 @@ export default function AuthPage(){
                 </div>
                 <div>
                   <label style={{fontSize:'12px',color:'var(--text-secondary)',marginBottom:'5px',display:'block'}}>Password</label>
-                  <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" style={{width:'100%',padding:'9px 12px',border:'1px solid var(--border)',borderRadius:'7px',fontSize:'13px',background:'var(--bg)',color:'var(--text-primary)',outline:'none'}}/>
+                  <div style={{position:'relative'}}>
+                    <input
+                      type={showPassword?'text':'password'}
+                      value={password}
+                      onChange={e=>setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      style={{width:'100%',padding:'9px 36px 9px 12px',border:'1px solid var(--border)',borderRadius:'7px',fontSize:'13px',background:'var(--bg)',color:'var(--text-primary)',outline:'none'}}
+                    />
+                    <button
+                      type="button"
+                      onClick={()=>setShowPassword(!showPassword)}
+                      style={{
+                        position:'absolute',
+                        right:'10px',
+                        top:'50%',
+                        transform:'translateY(-50%)',
+                        background:'none',
+                        border:'none',
+                        cursor:'pointer',
+                        color:'var(--text-secondary)',
+                        padding:'4px',
+                        display:'flex',
+                        alignItems:'center',
+                        justifyContent:'center'
+                      }}
+                    >
+                      <i className={showPassword?'ti ti-eye-off':'ti ti-eye'} style={{fontSize:'16px'}}/>
+                    </button>
+                  </div>
                 </div>
               </>
             )}
 
             {(mode==='register'||mode==='face')&&(
-              <div>
-                <label style={{fontSize:'12px',color:'var(--text-secondary)',marginBottom:'6px',display:'block'}}>
-                  {mode==='register'?'Face capture (for Face ID)':'Look at camera and click Sign in'}
+              <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+                <label style={{fontSize:'12px',color:'var(--text-secondary)',marginBottom:'2px',display:'block'}}>
+                  {mode==='register'?'Face capture (for Face ID)':'Look at camera and capture photo'}
                 </label>
-                <video ref={videoRef} autoPlay muted playsInline style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',background:'#000',aspectRatio:'4/3',objectFit:'cover'}}/>
+                <div style={{position:'relative',width:'100%',aspectRatio:'4/3',borderRadius:'8px',border:'1px solid var(--border)',overflow:'hidden',background:'#000'}}>
+                  {photoCaptured && previewUrl ? (
+                    <img src={previewUrl} alt="Preview" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  ) : (
+                    <video ref={videoRef} autoPlay muted playsInline style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  )}
+                </div>
                 <canvas ref={canvasRef} style={{display:'none'}}/>
+                
+                {photoCaptured ? (
+                  <button type="button" onClick={handleRetake} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',padding:'8px',borderRadius:'7px',border:'1px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontSize:'12px',fontWeight:500,cursor:'pointer'}}>
+                    <i className="ti ti-rotate" style={{fontSize:'14px'}}/>
+                    Retake Photo
+                  </button>
+                ) : (
+                  <button type="button" onClick={handleCapture} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',padding:'8px',borderRadius:'7px',border:'none',background:'var(--accent)',color:'#fff',fontSize:'12px',fontWeight:500,cursor:'pointer'}}>
+                    <i className="ti ti-camera" style={{fontSize:'14px'}}/>
+                    Capture Photo
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -153,7 +230,6 @@ export default function AuthPage(){
           </button>
         </div>
       </div>
-
 
     </div>
   )

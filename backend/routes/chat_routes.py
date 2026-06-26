@@ -11,9 +11,12 @@ router=APIRouter()
 
 @router.post("/stream")
 async def chat_stream(data:ChatMessage,user=Depends(get_current_user)):
+    from services.chat_service import get_or_create_session
+    session_id = await get_or_create_session(user["id"], data.session_id)
     return StreamingResponse(
-        stream_chat(user["id"],data.message,data.session_id),
-        media_type="text/event-stream"
+        stream_chat(user["id"],data.message,session_id),
+        media_type="text/event-stream",
+        headers={"X-Session-Id": session_id}
     )
 
 @router.get("/sessions/{session_id}/messages")
@@ -29,9 +32,12 @@ async def get_messages(session_id:str,user=Depends(get_current_user)):
 
 @router.post("/rag-stream")
 async def rag_stream(data:ChatMessage,user=Depends(get_current_user)):
+    from services.chat_service import get_or_create_session
+    session_id = await get_or_create_session(user["id"], data.session_id)
     return StreamingResponse(
-        rag_chat(user["id"],data.message,data.session_id),
-        media_type="text/event-stream"
+        rag_chat(user["id"],data.message,session_id),
+        media_type="text/event-stream",
+        headers={"X-Session-Id": session_id}
     )
 
 @router.get("/sessions")

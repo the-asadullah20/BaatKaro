@@ -1,12 +1,12 @@
 import numpy as np
 
-def compare_faces(stored_encoding:list,query_encoding:list,threshold:float=0.6)->bool:
+def compare_faces(stored_encoding:list,query_encoding:list,threshold:float=1.3)->bool:
     stored=np.array(stored_encoding)
     query=np.array(query_encoding)
     distance=np.linalg.norm(stored-query)
     return distance<threshold
 
-def find_matching_user(users:list,query_encoding:list,threshold:float=0.6):
+def find_matching_user(users:list,query_encoding:list,threshold:float=1.3):
     query=np.array(query_encoding)
     best_match=None
     best_distance=float("inf")

@@ -1,0 +1,9 @@
+node_modules/
+.next/*
+!.next/standalone
+!.next/static
+out/
+.env.local
+.git/
+.gitignore
+Dockerfile
