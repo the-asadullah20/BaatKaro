@@ -52,11 +52,19 @@ export default function AudioRecorder({onTranscript,lastReply}:Props){
     setPlaying(false)
   }
   return(
-    <div style={{display:'flex',gap:'4px'}}>
-      <button onClick={toggle} title={recording?'Stop recording':'Record voice'} style={{width:'28px',height:'28px',borderRadius:'6px',border:'none',background:recording?'var(--accent-light)':'transparent',color:recording?'var(--accent)':'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s'}}>
+    <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
+      <button onClick={toggle} title={recording?'Stop recording':'Record voice'} className={recording?'animate-pulse-mic':''} style={{width:'28px',height:'28px',borderRadius:'6px',border:'none',background:recording?'var(--accent-light)':'transparent',color:recording?'var(--accent)':'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s'}}>
         <i className={`ti ti-microphone${recording?'-off':''}`} style={{fontSize:'15px'}} aria-hidden="true"/>
       </button>
-      {lastReply&&(
+      {recording&&(
+        <div className="recording-wave" title="Listening to voice...">
+          <div className="recording-bar"/>
+          <div className="recording-bar"/>
+          <div className="recording-bar"/>
+          <div className="recording-bar"/>
+        </div>
+      )}
+      {lastReply&&!recording&&(
         <button onClick={playing?stopTTS:playTTS} title={playing?'Stop':'Play response'} style={{width:'28px',height:'28px',borderRadius:'6px',border:'none',background:playing?'var(--accent-light)':'transparent',color:playing?'var(--accent)':'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s'}}>
           <i className={`ti ti-${playing?'player-stop':'volume'}`} style={{fontSize:'15px'}} aria-hidden="true"/>
         </button>

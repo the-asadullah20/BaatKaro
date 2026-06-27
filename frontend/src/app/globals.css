@@ -80,3 +80,47 @@ input,textarea{font-family:'Inter',sans-serif}
     z-index: 99;
   }
 }
+
+/* Mic Recording Pulse & Wave animations */
+@keyframes pulse-accent {
+  0% {
+    box-shadow: 0 0 0 0 rgba(201, 122, 82, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(201, 122, 82, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(201, 122, 82, 0);
+  }
+}
+.animate-pulse-mic {
+  animation: pulse-accent 1.5s infinite;
+}
+
+.recording-wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 14px;
+  padding: 0 4px;
+}
+.recording-bar {
+  width: 3px;
+  height: 4px;
+  background-color: var(--accent);
+  border-radius: 1px;
+  animation: wave-bounce 0.6s ease-in-out infinite alternate;
+}
+.recording-bar:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.recording-bar:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.recording-bar:nth-child(4) {
+  animation-delay: 0.1s;
+}
+@keyframes wave-bounce {
+  from { height: 4px; }
+  to { height: 14px; }
+}
