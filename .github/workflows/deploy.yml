@@ -1,5 +1,4 @@
 name: Deploy to Google Cloud Run
-#hahah#
 on:
   push:
     branches:
