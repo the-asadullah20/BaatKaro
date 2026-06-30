@@ -7,6 +7,8 @@ def compare_faces(stored_encoding:list,query_encoding:list,threshold:float=1.8)-
     print(f"Comparing face: distance is {distance} (threshold is {threshold})", flush=True)
     return distance<threshold
 
+#threshold_update
+
 def find_matching_user(users:list,query_encoding:list,threshold:float=2.5):
     query=np.array(query_encoding)
     best_match=None
