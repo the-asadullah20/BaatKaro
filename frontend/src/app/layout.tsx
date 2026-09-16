@@ -2,8 +2,8 @@ import type {Metadata} from 'next'
 import '@/app/globals.css'
 
 export const metadata:Metadata={
-  title:'BaatKaro',
-  description:'Your AI Assistant',
+  title:'BaatKaro | AI Conversation Assistant',
+  description:'Chat with an AI assistant using text, voice, and document uploads.',
 }
 
 export default function RootLayout({children}:{children:React.ReactNode}){

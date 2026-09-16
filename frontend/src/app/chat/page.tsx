@@ -101,6 +101,8 @@ export default function ChatPage(){
           <button 
             className="mobile-menu-btn"
             onClick={()=>setSidebarOpen(true)}
+            aria-label="Open chat menu"
+            title="Open chat menu"
             style={{
               width:'30px',
               height:'30px',
@@ -119,11 +121,11 @@ export default function ChatPage(){
           </span>
           {haspdfs&&<span style={{fontSize:'11px',background:'var(--accent-light)',color:'var(--accent)',padding:'2px 8px',borderRadius:'9px',border:'1px solid rgba(201,122,82,0.2)'}}>PDF mode</span>}
           {haspdfs&&(
-            <button onClick={async()=>{await pdf.clear();setHasPdfs(false)}} title="Clear PDFs" style={{width:'30px',height:'30px',borderRadius:'6px',border:'none',background:'transparent',color:'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <button onClick={async()=>{await pdf.clear();setHasPdfs(false)}} aria-label="Clear uploaded PDFs" title="Clear PDFs" style={{width:'30px',height:'30px',borderRadius:'6px',border:'none',background:'transparent',color:'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center'}}>
               <i className="ti ti-trash" style={{fontSize:'15px'}} aria-hidden="true"/>
             </button>
           )}
-          <button onClick={()=>setShowPdfModal(true)} style={{width:'30px',height:'30px',borderRadius:'6px',border:'none',background:'transparent',color:'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <button onClick={()=>setShowPdfModal(true)} aria-label="Upload PDF" title="Upload PDF" style={{width:'30px',height:'30px',borderRadius:'6px',border:'none',background:'transparent',color:'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center'}}>
             <i className="ti ti-file-upload" style={{fontSize:'17px'}} aria-hidden="true"/>
           </button>
         </div>
@@ -149,10 +151,10 @@ export default function ChatPage(){
             />
             <div style={{display:'flex',gap:'4px'}}>
               <AudioRecorder onTranscript={handleSend} lastReply={lastReply}/>
-              <button onClick={()=>setShowPdfModal(true)} style={{width:'28px',height:'28px',borderRadius:'6px',border:'none',background:'transparent',color:'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <button onClick={()=>setShowPdfModal(true)} aria-label="Attach a PDF" title="Attach a PDF" style={{width:'28px',height:'28px',borderRadius:'6px',border:'none',background:'transparent',color:'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                 <i className="ti ti-paperclip" style={{fontSize:'15px'}} aria-hidden="true"/>
               </button>
-              <button onClick={()=>handleSend()} disabled={isStreaming||!input.trim()} style={{width:'28px',height:'28px',borderRadius:'6px',border:'none',background:input.trim()?'var(--accent)':'var(--border)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s'}}>
+              <button onClick={()=>handleSend()} disabled={isStreaming||!input.trim()} aria-label="Send message" title="Send message" style={{width:'28px',height:'28px',borderRadius:'6px',border:'none',background:input.trim()?'var(--accent)':'var(--border)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s'}}>
                 <i className="ti ti-send" style={{fontSize:'14px'}} aria-hidden="true"/>
               </button>
             </div>

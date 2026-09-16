@@ -44,6 +44,8 @@ export default function Sidebar({onNewChat,onSessionClick}:Props){
             <span style={{flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontSize:'12px'}}>{s.last_message||'New chat'}</span>
             <button
               onClick={(e)=>handleDelete(e,s.session_id)}
+              aria-label={`Delete chat: ${s.last_message||'New chat'}`}
+              title="Delete chat"
               style={{width:'18px',height:'18px',border:'none',background:'transparent',color:'var(--text-muted)',display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'4px'}}
             >
               <i className="ti ti-x" style={{fontSize:'11px'}} aria-hidden="true"/>
